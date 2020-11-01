@@ -20,7 +20,9 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "bsp.h"
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_rcc.h"
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
