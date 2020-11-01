@@ -6,6 +6,7 @@
 #define MODULEONE_BSP_H
 
 #include "bsp_actuators.h"
+#include "bsp_switches.h"
 
 void BSP_Init();
 void BSP_HAL_Delay(int ms);
