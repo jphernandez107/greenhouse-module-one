@@ -19,6 +19,7 @@ typedef struct {
 } Actuator_TypeDef;
 
 extern void *CoolingPump, *IrrigationPump;
+
 Actuator_TypeDef CoolingPumpActuator = {Cooling_Pump_GPIO_Port, Cooling_Pump_Pin, false};
 Actuator_TypeDef IrrigationPumpActuator = {Irrigation_Pump_GPIO_Port, Irrigation_Pump_Pin, false};
 
@@ -52,6 +53,7 @@ void BSP_Actuator_Off(void *actuator) {
 
 void BSP_Actuator_Toggle(void *actuator) {
     Actuator_TypeDef *act = (Actuator_TypeDef*) actuator;
+    act->isTurnedOn = !act->isTurnedOn;
     HAL_GPIO_TogglePin(act->Port, act->Pin);
 }
 

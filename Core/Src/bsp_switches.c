@@ -3,8 +3,6 @@
 //
 
 #include "bsp_switches.h"
-//#include "stm32f4xx_hal.h"
-#include "stm32f4xx.h"
 
 #define Cooling_Switch_Pin              GPIO_PIN_0
 #define Cooling_Switch_GPIO_Port        GPIOD
@@ -18,6 +16,7 @@ typedef struct {
 
 extern void *CoolingSwitch, *IrrigationSwitch;
 extern void APP_Switch_Release_Event(void *pressedSwitch);
+
 Switch_TypeDef CoolingPumpSwitch = {Cooling_Switch_GPIO_Port, Cooling_Switch_Pin};
 Switch_TypeDef IrrigationPumpSwitch = {Irrigation_Switch_GPIO_Port, Irrigation_Switch_Pin};
 
@@ -44,7 +43,7 @@ void BSP_Switches_Init() {
 }
 
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+void BSP_Switches_Pin_Interrupt_Callback(uint16_t GPIO_Pin) {
 
     if(GPIO_Pin == CoolingPumpSwitch.Pin){
         APP_Switch_Release_Event(CoolingSwitch);
