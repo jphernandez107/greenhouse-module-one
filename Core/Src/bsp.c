@@ -40,13 +40,16 @@ void BSP_Init() {
 //    }
 //}
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    BSP_Switches_Pin_Interrupt_Callback(GPIO_Pin);
+}
+
 void BSP_HAL_Delay(int ms) {
     HAL_Delay(ms);
 }
 
 
-void SystemClock_Config(void)
-{
+void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -86,10 +89,4 @@ void SystemClock_Config(void)
 
 
 
-void Error_Handler(void)
-{
-    /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
-
-    /* USER CODE END Error_Handler_Debug */
-}
+void Error_Handler(void) {}
