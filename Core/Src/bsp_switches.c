@@ -17,7 +17,8 @@ typedef struct {
 } Switch_TypeDef;
 
 extern void *CoolingSwitch, *IrrigationSwitch;
-Switch_TypeDef CoolingPumpSwitch = {GPIOD, Cooling_Switch_Pin};
+extern void APP_Switch_Release_Event(void *pressedSwitch);
+Switch_TypeDef CoolingPumpSwitch = {Cooling_Switch_GPIO_Port, Cooling_Switch_Pin};
 Switch_TypeDef IrrigationPumpSwitch = {Irrigation_Switch_GPIO_Port, Irrigation_Switch_Pin};
 
 void BSP_Switches_Init() {
@@ -26,11 +27,17 @@ void BSP_Switches_Init() {
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
     GPIO_InitStruct.Pin = Cooling_Switch_Pin|Irrigation_Switch_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(Irrigation_Switch_GPIO_Port, &GPIO_InitStruct);
     if (Cooling_Switch_GPIO_Port != Irrigation_Switch_GPIO_Port) HAL_GPIO_Init(Cooling_Switch_GPIO_Port, &GPIO_InitStruct);
+
+    /* EXTI interrupt init*/
+    HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);     // Enabling EXTI for Pin 0
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+    HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);     // Enabling EXTI for Pin 2
+    HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
     CoolingSwitch = &CoolingPumpSwitch;
     IrrigationSwitch = &IrrigationPumpSwitch;
@@ -40,11 +47,9 @@ void BSP_Switches_Init() {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
     if(GPIO_Pin == CoolingPumpSwitch.Pin){
-//        if (FlancoAscendente){
-//            APP_Sw_EventRelese();
-//        } else {
-//            APP_Sw_EventPress();
-//        }
+        APP_Switch_Release_Event(CoolingSwitch);
+    } else if (GPIO_Pin == IrrigationPumpSwitch.Pin) {
+        APP_Switch_Release_Event(IrrigationSwitch);
     }
 
 }
