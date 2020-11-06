@@ -24,6 +24,10 @@ void APP_Switch_Release_Event(void *pressedSwitch) {
     }
 }
 
+void APP_Timer100ms() {
+    BSP_Actuator_Toggle(IrrigationPump);
+}
+
 
 
 

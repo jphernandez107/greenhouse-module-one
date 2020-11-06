@@ -4,41 +4,71 @@
 
 
 #include "stm32f4xx.h"
-//#include <stm32f4xx_hal_tim.h>
+#include <stm32f4xx_hal_tim.h>
 #include "stm32f4xx_hal.h"
 #include "bsp_actuators.h"
 #include "bsp_switches.h"
-//#include "stm32f411e_discovery.h"
 
+extern void APP_Timer100ms();
+
+#define TIMER  TIM2
+//volatile static TIM_HandleTypeDef HTIMx;
+volatile static uint32_t gu32_ticks = 0;
+
+TIM_HandleTypeDef htim2;
 
 void SystemClock_Config(void);
 void Error_Handler(void);
-
+void HAL_TIM_Init(void);
 
 void BSP_Init() {
     HAL_Init();
 
     SystemClock_Config();
 
+    HAL_TIM_Init();
     BSP_Actuators_Init();
     BSP_Switches_Init();
 }
 
+void HAL_TIM_Init() {
+    gu32_ticks = (HAL_RCC_GetHCLKFreq() / 1000000);
+    htim2.Instance = TIMER;
+
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    htim2.Init.Prescaler = gu32_ticks; // deberia ser 100 pero HAL_RCC_GetHCLKFreq() devuelve 64MHz -> gu32_ticks = 64
+    htim2.Init.Period = 1000;
+    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) Error_Handler();
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK) Error_Handler();
+
+    HAL_TIM_Base_Start_IT(&htim2);
+}
 
 
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-//    static uint8_t App_100msTimeOut = 100;
-//    // Period TIM2 = 1ms
-//    if(htim->Instance == TIM2){
-//        if (App_100msTimeOut){
-//            App_100msTimeOut--;
-//            if (App_100msTimeOut == 0){
-////                APP_Timer100ms();
-//                App_100msTimeOut = 100;
-//            }
-//        }
-//    }
-//}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+    static uint16_t App_100msTimeOut = 500;
+    // Period TIM2 = 1ms
+    if(htim->Instance == TIMER){
+        if (App_100msTimeOut){
+            App_100msTimeOut--;
+            if (App_100msTimeOut == 0){
+                APP_Timer100ms();
+                App_100msTimeOut = 500;
+            }
+        }
+    }
+}
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     BSP_Switches_Pin_Interrupt_Callback(GPIO_Pin);

@@ -43,7 +43,7 @@ void BSP_Switches_Init() {
 }
 
 
-void BSP_Switches_Pin_Interrupt_Callback(uint16_t GPIO_Pin) {
+inline void BSP_Switches_Pin_Interrupt_Callback(uint16_t GPIO_Pin) {
 
     if(GPIO_Pin == CoolingPumpSwitch.Pin){
         APP_Switch_Release_Event(CoolingSwitch);
