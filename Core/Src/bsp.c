@@ -8,18 +8,20 @@
 #include "stm32f4xx_hal.h"
 #include "bsp_actuators.h"
 #include "bsp_switches.h"
+#include "bsp_lcd.h"
 
 extern void APP_Timer100ms();
 
 #define TIMER  TIM2
-//volatile static TIM_HandleTypeDef HTIMx;
 volatile static uint32_t gu32_ticks = 0;
 
 TIM_HandleTypeDef htim2;
+I2C_HandleTypeDef hi2c1;
 
 void SystemClock_Config(void);
 void Error_Handler(void);
 void HAL_TIM_Init(void);
+static void I2C1_Init(void);
 
 void BSP_Init() {
     HAL_Init();
@@ -27,8 +29,11 @@ void BSP_Init() {
     SystemClock_Config();
 
     HAL_TIM_Init();
+    I2C1_Init();
     BSP_Actuators_Init();
     BSP_Switches_Init();
+    lcd16x2_i2c_init(&hi2c1);
+    BSP_LCD_Initialize();
 }
 
 void HAL_TIM_Init() {
@@ -72,6 +77,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     BSP_Switches_Pin_Interrupt_Callback(GPIO_Pin);
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void I2C1_Init(void) {
+    hi2c1.Instance = I2C1;
+    hi2c1.Init.ClockSpeed = 100000;
+    hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+    hi2c1.Init.OwnAddress1 = 0;
+    hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    hi2c1.Init.OwnAddress2 = 0;
+    hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    if (HAL_I2C_Init(&hi2c1) != HAL_OK) Error_Handler();
 }
 
 void BSP_HAL_Delay(int ms) {

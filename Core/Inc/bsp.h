@@ -7,6 +7,7 @@
 
 #include "bsp_actuators.h"
 #include "bsp_switches.h"
+#include "bsp_lcd.h"
 
 void BSP_Init();
 void BSP_HAL_Delay(int ms);
