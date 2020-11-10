@@ -9,8 +9,10 @@
 #include "bsp_actuators.h"
 #include "bsp_switches.h"
 #include "bsp_lcd.h"
+#include "bsp_lux_sensor.h"
 
 extern void APP_Timer100ms();
+extern void APP_Timer10ms();
 
 #define TIMER  TIM2
 volatile static uint32_t gu32_ticks = 0;
@@ -34,6 +36,8 @@ void BSP_Init() {
     BSP_Switches_Init();
     lcd16x2_i2c_init(&hi2c1);
     BSP_LCD_Initialize();
+    BH1750_Init(&hi2c1);
+    BH1750_SetMode(CONTINUOUS_HIGH_RES_MODE_2);
 }
 
 void HAL_TIM_Init() {
@@ -62,14 +66,22 @@ void HAL_TIM_Init() {
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-    static uint16_t App_100msTimeOut = 500;
+    static uint16_t App_100msTimeOut = 100;
+    static uint16_t App_10msTimeOut = 10;
     // Period TIM2 = 1ms
     if(htim->Instance == TIMER){
         if (App_100msTimeOut){
             App_100msTimeOut--;
             if (App_100msTimeOut == 0){
+                App_100msTimeOut = 100;
                 APP_Timer100ms();
-                App_100msTimeOut = 500;
+            }
+        }
+        if (App_10msTimeOut){
+            App_10msTimeOut--;
+            if (App_10msTimeOut == 0){
+                App_10msTimeOut = 10;
+                APP_Timer10ms();
             }
         }
     }
@@ -143,3 +155,23 @@ void SystemClock_Config(void) {
 
 
 void Error_Handler(void) {}
+
+
+//**************************************************************************************//
+
+void BSP_Display_Set_Cursor(uint8_t row, uint8_t col) {
+    lcd16x2_i2c_setCursor(row, col);
+}
+
+void BSP_Display_Print(const char* str, ...) {
+    lcd16x2_i2c_printf(str);
+}
+
+void BSP_Display_Print_Custom_Char(char customChar) {
+    lcd16x2_i2c_print_custom_char(customChar);
+}
+
+void BSP_Get_Lux_Meter(float *BH1750_lux) {
+    BH1750_ReadLight(BH1750_lux);
+}
+

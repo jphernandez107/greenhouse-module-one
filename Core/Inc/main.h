@@ -10,4 +10,8 @@ extern "C" {
 }
 #endif
 
+void APP_Timer100ms();
+
+void APP_Display_Lux_Meter(float lux);
+
 #endif /* __MAIN_H */
