@@ -21,7 +21,7 @@ bool lcd16x2_i2c_init(I2C_HandleTypeDef *pI2cHandle);
  * @param[in] row - 0 or 1 for line1 or line2
  * @param[in] col - 0 - 15 (16 columns LCD)
  */
-void lcd16x2_i2c_setCursor(uint8_t row, uint8_t col);
+inline void lcd16x2_i2c_setCursor(uint8_t row, uint8_t col);
 /**
  * @brief Move to beginning of 1st line
  */
