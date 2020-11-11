@@ -10,15 +10,18 @@
 #include "bsp_switches.h"
 #include "bsp_lcd.h"
 #include "bsp_lux_sensor.h"
+#include "bsp_temp_hum.h"
 
 extern void APP_Timer100ms();
 extern void APP_Timer10ms();
 
-#define TIMER  TIM2
 volatile static uint32_t gu32_ticks = 0;
 
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim9;
 I2C_HandleTypeDef hi2c1;
+DHT_DataTypeDef DHT22 = {0.0f,0.0f};
+
 
 void SystemClock_Config(void);
 void Error_Handler(void);
@@ -30,6 +33,7 @@ void BSP_Init() {
 
     SystemClock_Config();
 
+    BSP_DHT_Init();
     HAL_TIM_Init();
     I2C1_Init();
     BSP_Actuators_Init();
@@ -42,7 +46,7 @@ void BSP_Init() {
 
 void HAL_TIM_Init() {
     gu32_ticks = (HAL_RCC_GetHCLKFreq() / 1000000);
-    htim2.Instance = TIMER;
+    htim2.Instance = TIM2;
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
@@ -50,31 +54,37 @@ void HAL_TIM_Init() {
     htim2.Init.Prescaler = gu32_ticks; // deberia ser 100 pero HAL_RCC_GetHCLKFreq() devuelve 64MHz -> gu32_ticks = 64
     htim2.Init.Period = 1000;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    if (HAL_TIM_Base_Init(&htim2) != HAL_OK) Error_Handler();
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) Error_Handler();
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK) Error_Handler();
 
+    htim9.Instance = TIM9;
+    htim9.Init.Prescaler = gu32_ticks - 1; // deberia ser 100 pero HAL_RCC_GetHCLKFreq() devuelve 64MHz -> gu32_ticks = 64
+    htim9.Init.Period = 65535;
+    htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
+    if (HAL_TIM_Base_Init(&htim9) != HAL_OK) Error_Handler();
+    if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK) Error_Handler();
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim9, &sMasterConfig) != HAL_OK) Error_Handler();
+
     HAL_TIM_Base_Start_IT(&htim2);
+    HAL_TIM_Base_Start(&htim9);
 }
-
-
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     static uint16_t App_100msTimeOut = 100;
     static uint16_t App_10msTimeOut = 10;
-    // Period TIM2 = 1ms
-    if(htim->Instance == TIMER){
+    // Period TIM2 = 1mS
+    // Period TIM9 = 1uS
+    if(htim->Instance == TIM2){
         if (App_100msTimeOut){
             App_100msTimeOut--;
             if (App_100msTimeOut == 0){
                 App_100msTimeOut = 100;
                 APP_Timer100ms();
+                DHT_GetData(&DHT22);
             }
         }
         if (App_10msTimeOut){
@@ -89,6 +99,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     BSP_Switches_Pin_Interrupt_Callback(GPIO_Pin);
+    DHT_GetData(&DHT22);
 }
 
 /**
@@ -113,6 +124,12 @@ void BSP_HAL_Delay(int ms) {
     HAL_Delay(ms);
 }
 
+void BSP_Blocking_delay_us(volatile uint16_t uS) {
+//    uint16_t tmp  = htim9.Instance->CNT;
+//    while (uS + tmp > htim9.Instance->CNT);
+    htim9.Instance->CNT = 0;
+    while (htim9.Instance->CNT < uS);
+}
 
 void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -152,8 +169,6 @@ void SystemClock_Config(void) {
     }
 }
 
-
-
 void Error_Handler(void) {}
 
 
@@ -175,3 +190,10 @@ void BSP_Get_Lux_Meter(float *BH1750_lux) {
     BH1750_ReadLight(BH1750_lux);
 }
 
+float BSP_Get_Room_Temperature() {
+    return DHT22.Temperature;
+}
+
+float BSP_Get_Room_Humidity() {
+    return DHT22.Humidity;
+}

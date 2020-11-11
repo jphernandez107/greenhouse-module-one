@@ -2,7 +2,7 @@
 
 void *CoolingPump, *IrrigationPump;
 void *CoolingSwitch, *IrrigationSwitch;
-float LuxMeter;
+float LuxMeter, RoomTemperature, RoomHumidity;
 
 int main(void) {
 
@@ -12,6 +12,8 @@ int main(void) {
     BSP_Actuator_On(IrrigationPump);
 
     while (1) {
+        APP_Display_Room_Temperature(RoomTemperature);
+        APP_Display_Room_Humidity(RoomHumidity);
         APP_Display_Lux_Meter(LuxMeter);
     }
 }
@@ -32,6 +34,8 @@ void APP_Timer10ms() {
 
 void APP_Timer100ms() {
     BSP_Actuator_Toggle(IrrigationPump);
+    RoomTemperature = BSP_Get_Room_Temperature();
+    RoomHumidity = BSP_Get_Room_Humidity();
 }
 
 void APP_Display_Lux_Meter(float lux) {
@@ -40,4 +44,15 @@ void APP_Display_Lux_Meter(float lux) {
     BSP_Display_Print("%0.0fLx  ", lux);
 }
 
+void APP_Display_Room_Temperature(float RoomTemp) {
+    lcd16x2_i2c_setCursor(0, 0);
+    lcd16x2_i2c_print_custom_char(THERMOMETER);
+    lcd16x2_i2c_printf("%0.1f%c ", RoomTemp, (char)223);
+}
 
+void APP_Display_Room_Humidity(float RoomHum) {
+    if (RoomHum >= 100) RoomHum = 99;
+    lcd16x2_i2c_setCursor(0, 7);
+    lcd16x2_i2c_print_custom_char(DROP);
+    lcd16x2_i2c_printf("%0.0f%c   ", RoomHum, '%');
+}
