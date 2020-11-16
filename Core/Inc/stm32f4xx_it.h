@@ -60,6 +60,7 @@ void SysTick_Handler(void);
 void EXTI0_IRQHandler(void);
 void EXTI2_IRQHandler(void);
 void TIM2_IRQHandler(void);
+void DMA2_Stream0_IRQHandler(void);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

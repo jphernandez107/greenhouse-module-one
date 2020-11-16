@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
+#include "bsp.h"
 
 /* Function prototypes */
 /**
@@ -16,12 +17,6 @@
  */
 bool lcd16x2_i2c_init(I2C_HandleTypeDef *pI2cHandle);
 
-/**
- * @brief Set cursor position
- * @param[in] row - 0 or 1 for line1 or line2
- * @param[in] col - 0 - 15 (16 columns LCD)
- */
-inline void lcd16x2_i2c_setCursor(uint8_t row, uint8_t col);
 /**
  * @brief Move to beginning of 1st line
  */
@@ -62,23 +57,16 @@ void lcd16x2_i2c_shiftRight(uint8_t offset);
  */
 void lcd16x2_i2c_shiftLeft(uint8_t offset);
 
-/**
- * @brief Print to display
- */
-void lcd16x2_i2c_printf(const char* str, ...);
 
 void lcd16x2_i2c_create_char(uint8_t location, uint8_t newChar[]);
 
 void lcd_custom(unsigned char *Pattern, char Location);
-
-void lcd16x2_i2c_print_custom_char(char customChar);
 
 void lcd16x2_i2c_create_custom_chars();
 void lcd16x2_i2c_create_init_custom_chars();
 
 void BSP_LCD_Initialize();
 
-enum customChar {LIGHTBULB, THERMOMETER, DROP, CO2_1, CO2_2, CO2_3, PPM_1, PPM_2};
 enum initCustomChar {CERO = 0, TWENTY = 1, FORTY = 2, SIXTY = 3, EIGHTY = 4, HUNDRED = 5};
 enum charSize {CUSTOM_CHAR_ARRAY_SIZE = 8, CUSTOM_CHAR_ARRAY_BYTE_SIZE = 8, INIT_CUSTOM_CHAR_ARRAY_SIZE = 6};
 
