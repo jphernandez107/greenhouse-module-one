@@ -12,7 +12,9 @@
 #include "bsp_lux_sensor.h"
 #include "bsp_temp_hum.h"
 #include "bsp_soil_humidity_sensor.h"
+#include "bsp_co2_sensor.h"
 
+extern void APP_Timer10s();
 extern void APP_Timer1000ms();
 extern void APP_Timer100ms();
 extern void APP_Timer10ms();
@@ -91,6 +93,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     static uint16_t App_1000msTimeOut = 1000;
     static uint16_t App_100msTimeOut = 100;
     static uint16_t App_10msTimeOut = 10;
+    static uint16_t App_10sTimeOut = 10;
     // Period TIM2 = 1mS
     // Period TIM9 = 1uS
     if(htim->Instance == TIM2){
@@ -113,7 +116,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
             App_1000msTimeOut--;
             if (App_1000msTimeOut == 0){
                 App_1000msTimeOut = 1000;
+                App_10sTimeOut--;
                 APP_Timer1000ms();
+                if(App_10sTimeOut == 0) {
+                    App_10sTimeOut = 10;
+                    APP_Timer10s();
+                }
             }
         }
     }
@@ -247,15 +255,15 @@ void Error_Handler(void) {}
 //**************************************************************************************//
 
 void BSP_Display_Set_Cursor(uint8_t row, uint8_t col) {
-    lcd16x2_i2c_setCursor(row, col);
+    BSP_LCD_Set_Cursor(row, col);
 }
 
 void BSP_Display_Print(const char* str, ...) {
-    lcd16x2_i2c_printf(str);
+    BSP_LCD_Print(str);
 }
 
 void BSP_Display_Print_Custom_Char(char customChar) {
-    lcd16x2_i2c_print_custom_char(customChar);
+    BSP_LCD_Print_Custom_Char(customChar);
 }
 
 void BSP_Get_Lux_Meter(float *BH1750_lux) {
@@ -271,5 +279,9 @@ float BSP_Get_Room_Humidity() {
 }
 
 uint32_t BSP_Get_Soil_Humidity() {
-    return BSP_Soil_Humidity_Get_Humidity(adc_values[1]);
+    return BSP_Soil_Humidity_Get_Humidity(adc_values[0]);
+}
+
+uint16_t BSP_Get_Co2() {
+    return BSP_Co2_Get_PPM(BSP_Co2_Get_Voltage(adc_values[1]));
 }

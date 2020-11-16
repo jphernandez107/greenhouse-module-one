@@ -152,7 +152,7 @@ bool lcd16x2_i2c_init(I2C_HandleTypeDef *pI2cHandle)
  * @param[in] row - 0 or 1 for line1 or line2
  * @param[in] col - 0 - 15 (16 columns LCD)
  */
-void lcd16x2_i2c_setCursor(uint8_t row, uint8_t col)
+void BSP_LCD_Set_Cursor(uint8_t row, uint8_t col)
 {
     uint8_t maskData;
     maskData = (col)&0x0F;
@@ -173,14 +173,14 @@ void lcd16x2_i2c_setCursor(uint8_t row, uint8_t col)
  */
 void lcd16x2_i2c_1stLine(void)
 {
-    lcd16x2_i2c_setCursor(0,0);
+    BSP_LCD_Set_Cursor(0, 0);
 }
 /**
  * @brief Move to beginning of 2nd line
  */
 void lcd16x2_i2c_2ndLine(void)
 {
-    lcd16x2_i2c_setCursor(1,0);
+    BSP_LCD_Set_Cursor(1, 0);
 }
 
 /**
@@ -259,7 +259,7 @@ void lcd16x2_i2c_shiftLeft(uint8_t offset)
 /**
  * @brief Print to display
  */
-void lcd16x2_i2c_printf(const char* str, ...)
+void BSP_LCD_Print(const char* str, ...)
 {
     char stringArray[20];
     va_list args;
@@ -292,7 +292,7 @@ void lcd16x2_i2c_create_init_custom_chars(){
     }
 }
 
-void lcd16x2_i2c_print_custom_char(const char customChar) {
+void BSP_LCD_Print_Custom_Char(const char customChar) {
     lcd16x2_i2c_sendData(customChar);
 }
 
@@ -300,12 +300,12 @@ void BSP_LCD_Initialize() {
     int delay = 500 / 16 / 6;
     lcd16x2_i2c_clear();
     lcd16x2_i2c_create_init_custom_chars();
-    lcd16x2_i2c_setCursor(0,0);
-    lcd16x2_i2c_printf("Initializing...");
+    BSP_LCD_Set_Cursor(0, 0);
+    BSP_LCD_Print("Initializing...");
     for (int i=0; i<16; i++) {
         for (int j=0; j<INIT_CUSTOM_CHAR_ARRAY_SIZE; j++) {
-            lcd16x2_i2c_setCursor(1, i);
-            lcd16x2_i2c_print_custom_char(j);
+            BSP_LCD_Set_Cursor(1, i);
+            BSP_LCD_Print_Custom_Char(j);
             BSP_Blocking_delay_ms(delay);
         }
     }
