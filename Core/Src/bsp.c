@@ -11,12 +11,20 @@
 #include "bsp_lcd.h"
 #include "bsp_lux_sensor.h"
 #include "bsp_temp_hum.h"
+#include "bsp_soil_humidity_sensor.h"
 
+extern void APP_Timer1000ms();
 extern void APP_Timer100ms();
 extern void APP_Timer10ms();
 
-volatile static uint32_t gu32_ticks = 0;
+#define TIMER  TIM2
+#define ADC_CHANNELS 2
 
+volatile static uint32_t gu32_ticks = 0;
+uint32_t adc_values[ADC_CHANNELS];
+
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim9;
 I2C_HandleTypeDef hi2c1;
@@ -27,6 +35,8 @@ void SystemClock_Config(void);
 void Error_Handler(void);
 void HAL_TIM_Init(void);
 static void I2C1_Init(void);
+static void ADC1_Init(void);
+static void DMA_Init(void);
 
 void BSP_Init() {
     HAL_Init();
@@ -35,13 +45,17 @@ void BSP_Init() {
 
     BSP_DHT_Init();
     HAL_TIM_Init();
+    DMA_Init();
     I2C1_Init();
+    HAL_TIM_Init();
+    ADC1_Init();
     BSP_Actuators_Init();
     BSP_Switches_Init();
     lcd16x2_i2c_init(&hi2c1);
     BSP_LCD_Initialize();
     BH1750_Init(&hi2c1);
     BH1750_SetMode(CONTINUOUS_HIGH_RES_MODE_2);
+    HAL_ADC_Start_DMA(&hadc1, adc_values, ADC_CHANNELS);
 }
 
 void HAL_TIM_Init() {
@@ -74,6 +88,7 @@ void HAL_TIM_Init() {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+    static uint16_t App_1000msTimeOut = 1000;
     static uint16_t App_100msTimeOut = 100;
     static uint16_t App_10msTimeOut = 10;
     // Period TIM2 = 1mS
@@ -92,6 +107,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
             if (App_10msTimeOut == 0){
                 App_10msTimeOut = 10;
                 APP_Timer10ms();
+            }
+        }
+        if (App_1000msTimeOut){
+            App_1000msTimeOut--;
+            if (App_1000msTimeOut == 0){
+                App_1000msTimeOut = 1000;
+                APP_Timer1000ms();
             }
         }
     }
@@ -120,15 +142,65 @@ static void I2C1_Init(void) {
     if (HAL_I2C_Init(&hi2c1) != HAL_OK) Error_Handler();
 }
 
-void BSP_HAL_Delay(int ms) {
-    HAL_Delay(ms);
+void BSP_Blocking_delay_ms(int mS) {
+//    HAL_Delay(ms);
+    while(mS > 0) {
+        htim9.Instance->CNT = 0;
+        mS--;
+        while (htim9.Instance->CNT < 1000);
+    }
 }
 
 void BSP_Blocking_delay_us(volatile uint16_t uS) {
-//    uint16_t tmp  = htim9.Instance->CNT;
-//    while (uS + tmp > htim9.Instance->CNT);
     htim9.Instance->CNT = 0;
     while (htim9.Instance->CNT < uS);
+}
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void ADC1_Init(void) {
+    ADC_ChannelConfTypeDef sConfig = {0};
+
+    /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+    */
+    hadc1.Instance = ADC1;
+    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+    hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+    hadc1.Init.ScanConvMode = ENABLE;
+    hadc1.Init.ContinuousConvMode = ENABLE;
+    hadc1.Init.DiscontinuousConvMode = DISABLE;
+    hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    hadc1.Init.NbrOfConversion = 2;
+    hadc1.Init.DMAContinuousRequests = ENABLE;
+    hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    if (HAL_ADC_Init(&hadc1) != HAL_OK) Error_Handler();
+    /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+    */
+    sConfig.Channel = ADC_CHANNEL_1;
+    sConfig.Rank = 1;
+    sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) Error_Handler();
+    /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+    */
+    sConfig.Channel = ADC_CHANNEL_2;
+    sConfig.Rank = 2;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) Error_Handler();
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void DMA_Init(void) {
+    /* DMA controller clock enable */
+    __HAL_RCC_DMA2_CLK_ENABLE();
+    /* DMA interrupt init */
+    /* DMA2_Stream0_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 }
 
 void SystemClock_Config(void) {
@@ -196,4 +268,8 @@ float BSP_Get_Room_Temperature() {
 
 float BSP_Get_Room_Humidity() {
     return DHT22.Humidity;
+}
+
+uint32_t BSP_Get_Soil_Humidity() {
+    return BSP_Soil_Humidity_Get_Humidity(adc_values[1]);
 }

@@ -29,7 +29,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
-
+extern DMA_HandleTypeDef hdma_adc1;
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -221,5 +221,12 @@ void EXTI2_IRQHandler(void) {
   */
 void TIM2_IRQHandler(void) {
     HAL_TIM_IRQHandler(&htim2);
+}
+
+/**
+  * @brief This function handles DMA2 stream0 global interrupt.
+  */
+void DMA2_Stream0_IRQHandler(void) {
+    HAL_DMA_IRQHandler(&hdma_adc1);
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -43,6 +43,7 @@
 /* Library variables */
 static I2C_HandleTypeDef* lcd16x2_i2cHandle;
 static uint8_t LCD_I2C_SLAVE_ADDRESS=0;
+extern void BSP_Blocking_delay_ms(int ms);
 #define LCD_I2C_SLAVE_ADDRESS_0  0x4E
 #define LCD_I2C_SLAVE_ADDRESS_1  0x7E
 
@@ -102,7 +103,7 @@ static void lcd16x2_i2c_sendData(uint8_t data)
  */
 bool lcd16x2_i2c_init(I2C_HandleTypeDef *pI2cHandle)
 {
-    HAL_Delay(50);
+    BSP_Blocking_delay_ms(50);
     lcd16x2_i2cHandle = pI2cHandle;
     if(HAL_I2C_IsDeviceReady(lcd16x2_i2cHandle, LCD_I2C_SLAVE_ADDRESS_0, 5, 500) != HAL_OK)
     {
@@ -121,27 +122,27 @@ bool lcd16x2_i2c_init(I2C_HandleTypeDef *pI2cHandle)
     }
     //Initialise LCD for 4-bit operation
     //1. Wait at least 15ms
-    HAL_Delay(45);
+    BSP_Blocking_delay_ms(45);
     //2. Attentions sequence
     lcd16x2_i2c_sendCommand(0x30);
-    HAL_Delay(5);
+    BSP_Blocking_delay_ms(5);
     lcd16x2_i2c_sendCommand(0x30);
-    HAL_Delay(1);
+    BSP_Blocking_delay_ms(1);
     lcd16x2_i2c_sendCommand(0x30);
-    HAL_Delay(8);
+    BSP_Blocking_delay_ms(8);
     lcd16x2_i2c_sendCommand(0x20);
-    HAL_Delay(8);
+    BSP_Blocking_delay_ms(8);
 
     lcd16x2_i2c_sendCommand(LCD_FUNCTIONSET | LCD_FUNCTION_N);
-    HAL_Delay(1);
+    BSP_Blocking_delay_ms(1);
     lcd16x2_i2c_sendCommand(LCD_DISPLAYCONTROL);
-    HAL_Delay(1);
+    BSP_Blocking_delay_ms(1);
     lcd16x2_i2c_sendCommand(LCD_CLEARDISPLAY);
-    HAL_Delay(3);
+    BSP_Blocking_delay_ms(3);
     lcd16x2_i2c_sendCommand(0x04 | LCD_ENTRY_ID);
-    HAL_Delay(1);
+    BSP_Blocking_delay_ms(1);
     lcd16x2_i2c_sendCommand(LCD_DISPLAYCONTROL | LCD_DISPLAY_D);
-    HAL_Delay(3);
+    BSP_Blocking_delay_ms(3);
 
     return true;
 }
@@ -215,7 +216,7 @@ void lcd16x2_i2c_cursorShow(bool state)
 void lcd16x2_i2c_clear(void)
 {
     lcd16x2_i2c_sendCommand(LCD_CLEARDISPLAY);
-    HAL_Delay(3);
+    BSP_Blocking_delay_ms(3);
 }
 
 /**
@@ -305,7 +306,7 @@ void BSP_LCD_Initialize() {
         for (int j=0; j<INIT_CUSTOM_CHAR_ARRAY_SIZE; j++) {
             lcd16x2_i2c_setCursor(1, i);
             lcd16x2_i2c_print_custom_char(j);
-            HAL_Delay(delay);
+            BSP_Blocking_delay_ms(delay);
         }
     }
     lcd16x2_i2c_clear();
