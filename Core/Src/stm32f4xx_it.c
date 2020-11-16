@@ -62,6 +62,7 @@
 /* USER CODE BEGIN EV */
 
 extern TIM_HandleTypeDef htim2;
+extern ADC_HandleTypeDef hadc1;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -221,5 +222,12 @@ void EXTI2_IRQHandler(void) {
   */
 void TIM2_IRQHandler(void) {
     HAL_TIM_IRQHandler(&htim2);
+}
+
+/**
+  * @brief This function handles ADC1 global interrupt.
+  */
+void ADC_IRQHandler(void) {
+    HAL_ADC_IRQHandler(&hadc1);
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

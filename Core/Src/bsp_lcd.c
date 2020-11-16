@@ -102,7 +102,7 @@ static void lcd16x2_i2c_sendData(uint8_t data)
  */
 bool lcd16x2_i2c_init(I2C_HandleTypeDef *pI2cHandle)
 {
-    HAL_Delay(50);
+//    HAL_Delay(50);
     lcd16x2_i2cHandle = pI2cHandle;
     if(HAL_I2C_IsDeviceReady(lcd16x2_i2cHandle, LCD_I2C_SLAVE_ADDRESS_0, 5, 500) != HAL_OK)
     {

@@ -15,5 +15,6 @@ void BSP_Display_Set_Cursor(uint8_t row, uint8_t col);
 void BSP_Display_Print(const char* str, ...);
 void BSP_Display_Print_Custom_Char(char customChar);
 void BSP_Get_Lux_Meter(float *BH1750_lux);
+void BSP_Get_Soil_Humidity();
 
 #endif //MODULEONE_BSP_H

@@ -153,4 +153,52 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base) {
     }
 }
 
+/**
+* @brief ADC MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hadc: ADC handle pointer
+* @retval None
+*/
+void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    if(hadc->Instance==ADC1) {
+        __HAL_RCC_ADC1_CLK_ENABLE();
+
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        /**ADC1 GPIO Configuration
+        PA1     ------> ADC1_IN1
+        PA2     ------> ADC1_IN2
+        */
+        GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
+        GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+        HAL_NVIC_SetPriority(ADC_IRQn, 0, 0);
+        HAL_NVIC_EnableIRQ(ADC_IRQn);
+    }
+
+}
+
+/**
+* @brief ADC MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hadc: ADC handle pointer
+* @retval None
+*/
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc) {
+    if(hadc->Instance==ADC1) {
+        __HAL_RCC_ADC1_CLK_DISABLE();
+
+        /**ADC1 GPIO Configuration
+        PA1     ------> ADC1_IN1
+        PA2     ------> ADC1_IN2
+        */
+        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1|GPIO_PIN_2);
+
+        HAL_NVIC_DisableIRQ(ADC_IRQn);
+    }
+
+}
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

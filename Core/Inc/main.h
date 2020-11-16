@@ -14,4 +14,6 @@ void APP_Timer100ms();
 
 void APP_Display_Lux_Meter(float lux);
 
+void APP_Display_Soil_Humidity(uint8_t soilHum);
+
 #endif /* __MAIN_H */
